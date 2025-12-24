@@ -250,6 +250,35 @@ button:hover {
 .folder .icon { color: var(--folder-color); }
 .file .icon { filter: grayscale(1); } /* generic file icon */
 
+.icon-domain {
+    margin-right: 6px;
+    font-size: 14px;
+    line-height: 1;
+}
+.icon-domain::after {
+    content: '☁️';
+}
+
+.icon-folder {
+    margin-right: 6px;
+    font-size: 14px;
+    color: var(--folder-color);
+    line-height: 1;
+}
+.icon-folder::after {
+    content: '📁';
+}
+
+.icon-image-preview {
+    width: 13px;
+    height: 13px;
+    object-fit: contain;
+    margin-right: 6px;
+    vertical-align: middle;
+    background-color: #333;
+    border: 1px solid #555;
+}
+
 /* Edge-like JS Icon */
 .icon-js-file {
     display: inline-block;

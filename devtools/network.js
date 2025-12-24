@@ -99,9 +99,21 @@ export function handleNetworkEvent(method, params) {
             startTime: timestamp,
             display: true,
             postData: request.postData,
-            requestHeaders: request.headers
+            requestHeaders: request.headers, // Initial headers
+            extraHeaders: {} // To store ExtraInfo headers
         });
         renderNetworkRow(requestId);
+    }
+    else if (method === 'Network.requestWillBeSentExtraInfo') {
+        const { requestId, headers } = params;
+        const req = networkRequests.get(requestId);
+        if (req) {
+             // Merge headers. ExtraInfo usually contains all actual headers sent over wire (including cookies, auto-headers)
+             // We treat them as 'authoritative' for cURL generation but keep original for display if needed?
+             // Actually, usually we just want to merge them.
+             // Note: headers here might be lower-case (http2).
+             req.extraHeaders = { ...req.extraHeaders, ...headers };
+        }
     }
     else if (method === 'Network.responseReceived') {
         const { requestId, response } = params;
@@ -326,10 +338,43 @@ function generateCurl(req) {
     let curl = `curl '${req.url}'`;
     curl += ` \\\n  -X '${req.method}'`;
 
+    // Merge initial headers and extra headers
+    // Priority: ExtraInfo > requestHeaders (usually ExtraInfo is more complete/processed)
+    // We normalize keys to lowercase for deduplication logic, but try to preserve casing if possible
+    // However, HTTP/2 is lowercase. Chrome devtools usually exports lowercase for h2.
+
+    const combinedHeaders = {};
+
+    // Start with requestHeaders
     if (req.requestHeaders) {
         for (const [key, value] of Object.entries(req.requestHeaders)) {
-            curl += ` \\\n  -H '${key}: ${value}'`;
+            combinedHeaders[key.toLowerCase()] = { name: key, value: value };
         }
+    }
+
+    // Overlay extraHeaders
+    if (req.extraHeaders) {
+        for (const [key, value] of Object.entries(req.extraHeaders)) {
+            // extraHeaders usually has pseudo-headers like :authority, :method which we might want to exclude or convert?
+            // cURL handles authority via URL, but :authority header can be explicit.
+            // Chrome devtools export includes 'authority' (no colon) usually if h2.
+            // Let's just include them as is, except maybe :method, :scheme, :path which are part of the command line.
+            if (key.startsWith(':')) {
+                if (key === ':authority') {
+                     combinedHeaders['authority'] = { name: 'authority', value: value };
+                }
+                continue; // Skip other pseudo headers for cURL
+            }
+            combinedHeaders[key.toLowerCase()] = { name: key, value: value };
+        }
+    }
+
+    // Sort keys
+    const sortedKeys = Object.keys(combinedHeaders).sort();
+
+    for (const key of sortedKeys) {
+        const h = combinedHeaders[key];
+        curl += ` \\\n  -H '${h.name}: ${h.value}'`;
     }
 
     if (req.postData) {

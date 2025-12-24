@@ -143,9 +143,9 @@ function createTreeNode(node, level) {
     // Icon
     let iconStr = '';
     if (node.type === 'domain') {
-        iconStr = '<span class="icon">☁️</span>';
+        iconStr = '<span class="icon-domain"></span>';
     } else if (node.type === 'folder') {
-        iconStr = '<span class="icon">📁</span>';
+        iconStr = '<span class="icon-folder"></span>';
     } else {
         // File
         if (/\.(js|jsx|ts|tsx)(\?.*)?$/.test(node.name)) {
@@ -155,7 +155,8 @@ function createTreeNode(node, level) {
         } else if (/\.(html|htm|php|asp|jsp|xml)(\?.*)?$/.test(node.name)) {
             iconStr = '<span class="icon-html-file"></span>';
         } else if (/\.(png|jpg|jpeg|gif|svg|webp|ico)(\?.*)?$/.test(node.name)) {
-            iconStr = '<span class="icon-image-file"></span>';
+            // Use image thumbnail
+            iconStr = `<img src="${escapeHtml(node.url)}" class="icon-image-preview" onerror="this.style.display='none'; this.nextSibling.style.display='inline-block'"><span class="icon-image-file" style="display:none"></span>`;
         } else {
             iconStr = '<span class="icon">📄</span>';
         }
