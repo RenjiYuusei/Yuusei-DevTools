@@ -26,6 +26,10 @@ const codeViewer = document.getElementById('code-viewer');
 Network.initNetwork(networkList, filterRadios, clearNetworkBtn, preserveCheckbox, detailsModal);
 Sources.initSources(fileTree, codeViewer);
 
+// Expose modules for testing/debugging
+window.Network = Network;
+window.Sources = Sources;
+
 // 3. Tab Switching
 const tabs = document.querySelectorAll('.tab-btn');
 const panels = document.querySelectorAll('.panel');

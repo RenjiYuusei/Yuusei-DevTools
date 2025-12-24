@@ -150,6 +150,8 @@ function createTreeNode(node, level) {
         // File
         if (node.name.endsWith('.js') || node.name.includes('.js?')) {
             iconStr = '<span class="icon-js-file"></span>';
+        } else if (node.name.endsWith('.css') || node.name.includes('.css?')) {
+            iconStr = '<span class="icon-css-file"></span>';
         } else {
             iconStr = '<span class="icon">📄</span>';
         }

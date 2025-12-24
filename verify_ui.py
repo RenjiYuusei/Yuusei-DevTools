@@ -107,7 +107,7 @@ def run():
         print("Testing Sources Tab...")
         page.click('button[data-tab="sources"]')
 
-        # Add mock script
+        # Add mock script and CSS resource
         page.evaluate("""
             if (window.Sources) {
                 window.Sources.handleScriptParsed({
@@ -118,8 +118,45 @@ def run():
                     url: 'https://example.com/assets/vendor/jquery.min.js',
                     scriptId: '102'
                 });
+                // Simulate ResourceTree loaded for CSS
+                // We'll hack it by directly calling the private addFileToTreeModel if it was exposed,
+                // but since it's not, we can simulate via handleScriptParsed if we change the mock logic
+                // OR we can trigger loadResources and mock the response.
+                // Simpler: Just rely on handleScriptParsed if it accepts any URL,
+                // but in reality CSS comes from Page.getResourceTree.
+                // Let's assume we can push a 'resource' via a mock function we add to sources.js for testing?
+                // No, let's just use the fact that addFileToTreeModel is internal.
+                // However, we can use the fact that Sources.initSources is exported.
+
+                // Wait, Sources.loadResources calls Page.getResourceTree.
+                // We'll mock that command in the window.chrome mock.
             }
         """)
+
+        # Mock Page.getResourceTree response
+        page.evaluate("""
+             window.chrome.debugger.sendCommand = (target, method, params, callback) => {
+                if (method === 'Page.getResourceTree') {
+                     callback({
+                        frameTree: {
+                            frame: { id: 'f1', url: 'https://example.com' },
+                            resources: [
+                                { url: 'https://example.com/styles/main.css', type: 'Stylesheet', mimeType: 'text/css' },
+                                { url: 'https://example.com/styles/theme.css', type: 'Stylesheet', mimeType: 'text/css' }
+                            ]
+                        }
+                     });
+                } else if (method === 'Page.getResourceContent') {
+                    callback({ content: '.body { color: red; word-wrap: break-word; } /* Long content to test wrapping ................................................................. */' });
+                } else {
+                     // Default mock for others
+                     if (callback) callback({});
+                }
+             };
+        """)
+
+        # Trigger load resources
+        page.evaluate("window.Sources.loadResources()")
 
         # Wait for render (requestAnimationFrame)
         time.sleep(1.0)
@@ -144,7 +181,33 @@ def run():
             print(f"Found {icon_count} JS icons")
         else:
             print("Could not find app.js in tree")
-            print(page.inner_html('#file-tree'))
+
+        # Check CSS
+        styles_folder = page.locator('.tree-row:has-text("styles")')
+        if styles_folder.count() > 0:
+            styles_folder.first.click()
+            time.sleep(0.5)
+
+            main_css = page.locator('.tree-row:has-text("main.css")')
+            if main_css.count() > 0:
+                print("Found main.css")
+                css_icon_count = page.locator('.icon-css-file').count()
+                print(f"Found {css_icon_count} CSS icons")
+
+                main_css.click()
+                time.sleep(0.5)
+
+                # Check for wrapped text style
+                is_wrapped = page.evaluate("""
+                    () => {
+                        const pre = document.querySelector('.code-block');
+                        const style = window.getComputedStyle(pre);
+                        return style.whiteSpace === 'pre-wrap' && style.wordBreak === 'break-all';
+                    }
+                """)
+                print(f"Code block wrapping verified: {is_wrapped}")
+
+                page.screenshot(path='verification_sources_css.png')
 
         browser.close()
 
