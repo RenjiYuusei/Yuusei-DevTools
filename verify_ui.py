@@ -99,6 +99,23 @@ def run():
             page.screenshot(path='verification_network_preview.png')
 
             # Close Modal
+            # Check Network Response Wrapping
+            page.click('button[data-target="tab-response"]')
+            time.sleep(1.0) # Wait for async body
+
+            is_net_wrapped = page.evaluate("""
+                () => {
+                    const pre = document.querySelector('#tab-response .code-block');
+                    if (!pre) return false;
+                    const style = window.getComputedStyle(pre);
+                    return style.whiteSpace === 'pre-wrap' && style.wordBreak === 'break-all';
+                }
+            """)
+            print(f"Network Response wrapping verified: {is_net_wrapped}")
+
+            page.screenshot(path='verification_network_response.png')
+
+            # Close Modal
             page.click('.close-modal')
         except Exception as e:
             print(f"Network tab interaction failed: {e}")

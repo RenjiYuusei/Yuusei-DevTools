@@ -277,12 +277,12 @@ button:hover {
     height: 13px;
     background-color: #56CCF2; /* CSS Blue */
     color: #323330;
-    font-size: 7px;
+    font-size: 8px;
     font-weight: 900;
     text-align: right;
     line-height: 13px;
     margin-right: 6px;
-    padding-right: 0px;
+    padding-right: 1px;
     border-radius: 1px;
     font-family: sans-serif;
     vertical-align: middle;
