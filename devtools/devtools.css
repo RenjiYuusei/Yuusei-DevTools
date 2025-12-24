@@ -273,22 +273,54 @@ button:hover {
 
 .icon-css-file {
     display: inline-block;
-    width: 13px;
+    width: 18px;
     height: 13px;
     background-color: #56CCF2; /* CSS Blue */
     color: #323330;
     font-size: 8px;
     font-weight: 900;
-    text-align: right;
+    text-align: center;
     line-height: 13px;
     margin-right: 6px;
-    padding-right: 1px;
     border-radius: 1px;
     font-family: sans-serif;
     vertical-align: middle;
 }
 .icon-css-file::after {
-    content: '{}';
+    content: 'CSS';
+}
+
+.icon-html-file {
+    display: inline-block;
+    width: 18px;
+    height: 13px;
+    background-color: #e44d26;
+    color: #fff;
+    font-size: 7px;
+    font-weight: 900;
+    text-align: center;
+    line-height: 13px;
+    margin-right: 6px;
+    border-radius: 1px;
+    font-family: sans-serif;
+    vertical-align: middle;
+}
+.icon-html-file::after {
+    content: 'html';
+}
+
+.icon-image-file {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    margin-right: 6px;
+    vertical-align: middle;
+    text-align: center;
+    line-height: 13px;
+    font-size: 10px;
+}
+.icon-image-file::after {
+    content: '🖼️';
 }
 
 .label {

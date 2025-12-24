@@ -148,10 +148,14 @@ function createTreeNode(node, level) {
         iconStr = '<span class="icon">📁</span>';
     } else {
         // File
-        if (node.name.endsWith('.js') || node.name.includes('.js?')) {
+        if (/\.(js|jsx|ts|tsx)(\?.*)?$/.test(node.name)) {
             iconStr = '<span class="icon-js-file"></span>';
-        } else if (node.name.endsWith('.css') || node.name.includes('.css?')) {
+        } else if (/\.(css|scss|sass|less)(\?.*)?$/.test(node.name)) {
             iconStr = '<span class="icon-css-file"></span>';
+        } else if (/\.(html|htm|php|asp|jsp|xml)(\?.*)?$/.test(node.name)) {
+            iconStr = '<span class="icon-html-file"></span>';
+        } else if (/\.(png|jpg|jpeg|gif|svg|webp|ico)(\?.*)?$/.test(node.name)) {
+            iconStr = '<span class="icon-image-file"></span>';
         } else {
             iconStr = '<span class="icon">📄</span>';
         }

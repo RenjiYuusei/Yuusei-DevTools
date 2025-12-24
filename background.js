@@ -22,22 +22,39 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 function attachAndOpen(tabId) {
-    chrome.debugger.attach({ tabId: tabId }, "1.3", () => {
+    const protocolVersion = "1.3";
+    chrome.debugger.attach({ tabId: tabId }, protocolVersion, () => {
         if (chrome.runtime.lastError) {
-          console.error(chrome.runtime.lastError);
-          return;
+            console.error("Attach failed:", chrome.runtime.lastError.message);
+            if (chrome.runtime.lastError.message.includes("Already attached")) {
+                // Force detach and retry
+                chrome.debugger.detach({ tabId: tabId }, () => {
+                    if (chrome.runtime.lastError) { /* ignore */ }
+                    setTimeout(() => {
+                        chrome.debugger.attach({ tabId: tabId }, protocolVersion, () => {
+                            if (chrome.runtime.lastError) {
+                                console.error("Retry attach failed:", chrome.runtime.lastError.message);
+                                return;
+                            }
+                            openWindow(tabId);
+                        });
+                    }, 100);
+                });
+            }
+            return;
         }
+        openWindow(tabId);
+    });
+}
 
-        // Open DevTools window
-        // Use 'popup' type for a standalone window feel
-        chrome.windows.create({
-          url: `devtools/devtools.html?tabId=${tabId}`,
-          type: 'popup',
-          width: 800,
-          height: 600
-        }, (win) => {
-            attachedTabs.set(tabId, win.id);
-        });
+function openWindow(tabId) {
+    chrome.windows.create({
+        url: `devtools/devtools.html?tabId=${tabId}`,
+        type: 'popup',
+        width: 800,
+        height: 600
+    }, (win) => {
+        attachedTabs.set(tabId, win.id);
     });
 }
 
