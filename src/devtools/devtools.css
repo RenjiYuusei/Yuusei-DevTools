@@ -1,0 +1,151 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header/Tabs */
+.header {
+  background-color: #f3f3f3;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  height: 28px;
+}
+
+.tabs {
+  display: flex;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 0 15px;
+  cursor: pointer;
+  color: #5f6368;
+  border-bottom: 2px solid transparent;
+  outline: none;
+}
+
+.tab-btn.active {
+  color: #1a73e8;
+  border-bottom: 2px solid #1a73e8;
+}
+
+.tab-btn:hover {
+  background-color: #e8eaed;
+}
+
+/* Panels */
+.panel {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel.active {
+  display: flex;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f1f3f4;
+  gap: 10px;
+}
+
+.filter-group label {
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* Network Table */
+.data-grid-container {
+  flex: 1;
+  overflow: auto;
+}
+
+.data-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-grid th {
+  text-align: left;
+  background: #f1f3f4;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 4px 8px;
+  position: sticky;
+  top: 0;
+  font-weight: normal;
+}
+
+.data-grid td {
+  border-bottom: 1px solid #eee;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.data-grid tr:hover {
+  background-color: #f5f5f5;
+}
+
+.data-grid tr.error {
+  color: red;
+}
+
+/* Sources Layout */
+#sources-panel {
+  flex-direction: row;
+}
+
+.sidebar {
+  width: 250px;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-tree {
+  padding: 5px;
+}
+
+.file-tree-item {
+  padding: 2px 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-tree-item:hover {
+  background-color: #f1f3f4;
+}
+
+.file-tree-item.selected {
+  background-color: #cfe8fc;
+}
+
+.main-content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.code-viewer {
+  padding: 10px;
+  white-space: pre;
+  font-family: 'Consolas', 'Monaco', monospace;
+  tab-size: 2;
+}

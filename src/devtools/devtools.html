@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevTools Lite</title>
+  <link rel="stylesheet" href="devtools.css">
+</head>
+<body>
+  <div class="header">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="network">Network</button>
+      <button class="tab-btn" data-tab="sources">Sources</button>
+    </div>
+  </div>
+
+  <div id="network-panel" class="panel active">
+    <div class="toolbar">
+      <div class="filter-group">
+        <label><input type="radio" name="filter" value="all" checked> All</label>
+        <label><input type="radio" name="filter" value="Fetch"> Fetch/XHR</label>
+        <label><input type="radio" name="filter" value="Script"> JS</label>
+        <label><input type="radio" name="filter" value="Image"> Img</label>
+        <label><input type="radio" name="filter" value="Stylesheet"> CSS</label>
+        <label><input type="radio" name="filter" value="Media"> Media</label>
+      </div>
+      <button id="clear-network">Clear</button>
+    </div>
+    <div class="data-grid-container">
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="network-list">
+          <!-- Rows inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="sources-panel" class="panel">
+    <div class="sidebar">
+      <div id="file-tree" class="file-tree">
+        <!-- File tree structure -->
+      </div>
+    </div>
+    <div class="main-content">
+      <div id="code-viewer" class="code-viewer">Select a file to view content</div>
+    </div>
+  </div>
+
+  <script src="devtools.js"></script>
+</body>
+</html>
