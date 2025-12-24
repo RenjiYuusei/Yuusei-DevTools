@@ -88,6 +88,12 @@ export function handleNavigation() {
 export function handleNetworkEvent(method, params) {
     if (method === 'Network.requestWillBeSent') {
         const { requestId, request, type, timestamp } = params;
+
+        // Filter out extension internal requests
+        if (request.url && request.url.startsWith('chrome-extension://')) {
+            return;
+        }
+
         networkRequests.set(requestId, {
             id: requestId,
             url: request.url,

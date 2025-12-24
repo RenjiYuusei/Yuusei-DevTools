@@ -11,6 +11,16 @@ if (!tabId) {
     throw new Error("No tabId");
 }
 
+// Keep-Alive Connection
+try {
+    const port = chrome.runtime.connect({ name: 'devtools-page' });
+    port.onDisconnect.addListener(() => {
+        console.log("Disconnected from background");
+    });
+} catch (e) {
+    console.error("Failed to connect to background:", e);
+}
+
 setTabId(tabId);
 
 // 2. UI Elements & Init
