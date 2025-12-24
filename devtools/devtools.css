@@ -7,11 +7,13 @@
   --text-secondary: #9aa0a6;
   --accent-color: #8ab4f8;
   --hover-bg: #35363a;
-  --selection-bg: #1c3a5e;
+  --selection-bg: #1c3a5e; /* Or #354561 */
   --row-hover-bg: #2a2b2e;
   --code-bg: #202124;
   --code-text: #e8eaed;
   --modal-overlay: rgba(0, 0, 0, 0.6);
+  --folder-color: #fbbc04; /* Yellowish for folders */
+  --file-color: #a8dadc;
 }
 
 html, body {
@@ -19,7 +21,7 @@ html, body {
   padding: 0;
   height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  font-size: 14px; /* Slightly larger base font for mobile */
+  font-size: 13px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -32,7 +34,7 @@ html, body {
   background-color: var(--header-bg);
   border-bottom: 1px solid var(--border-color);
   display: flex;
-  height: 40px; /* Taller for touch */
+  height: 35px;
   flex-shrink: 0;
   align-items: center;
 }
@@ -45,19 +47,19 @@ html, body {
 .tab-btn {
   background: none;
   border: none;
-  padding: 0 20px;
+  padding: 0 15px;
   cursor: pointer;
   color: var(--text-secondary);
-  border-bottom: 3px solid transparent; /* Thicker indicator */
+  border-bottom: 2px solid transparent;
   outline: none;
-  font-size: 14px;
-  transition: color 0.2s, border-bottom 0.2s;
+  font-size: 13px;
+  transition: color 0.1s, border-bottom 0.1s;
   height: 100%;
 }
 
 .tab-btn.active {
   color: var(--text-primary);
-  border-bottom: 3px solid var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
 }
 
 /* Panels */
@@ -77,33 +79,33 @@ html, body {
 .toolbar {
   display: flex;
   align-items: center;
-  padding: 8px;
+  padding: 6px;
   border-bottom: 1px solid var(--border-color);
   background: var(--header-bg);
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .filter-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .filter-group label {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   color: var(--text-secondary);
-  padding: 4px; /* Touch target padding */
+  font-size: 12px;
 }
 
 .controls-group {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-left: auto; /* Push to right */
+    gap: 8px;
+    margin-left: auto;
 }
 
 button {
@@ -111,8 +113,12 @@ button {
     border: 1px solid var(--border-color);
     color: var(--text-primary);
     border-radius: 4px;
-    padding: 6px 12px; /* Larger button */
+    padding: 4px 10px;
     cursor: pointer;
+    font-size: 12px;
+}
+button:hover {
+    background-color: #3e4045;
 }
 
 /* Network Table */
@@ -131,22 +137,27 @@ button {
   text-align: left;
   background: var(--header-bg);
   border-bottom: 1px solid var(--border-color);
-  padding: 8px; /* More padding */
+  border-right: 1px solid var(--border-color);
+  padding: 4px 8px;
   position: sticky;
   top: 0;
   font-weight: normal;
   color: var(--text-secondary);
   white-space: nowrap;
+  font-size: 12px;
+  z-index: 10;
 }
 
 .data-grid td {
   border-bottom: 1px solid var(--border-color);
-  padding: 8px; /* More padding */
+  border-right: 1px solid var(--border-color);
+  padding: 4px 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--text-primary);
-  height: 30px; /* Minimum row height */
+  height: 24px;
+  font-size: 12px;
 }
 
 .data-grid tr:hover {
@@ -158,68 +169,122 @@ button {
   color: #f28b82;
 }
 
+/* Network Columns */
+.name-col {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.row-thumb {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+    background: #fff; /* to see transparent images */
+    border: 1px solid #555;
+    border-radius: 2px;
+}
+
 .cell-sub {
     font-size: 11px;
     color: var(--text-secondary);
 }
 
-/* Sources Layout */
+/* Sources Layout - Tree */
 #sources-panel {
   flex-direction: row;
 }
 
 .sidebar {
-  width: 250px;
+  width: 280px; /* Wider to accommodate deeper trees */
   border-right: 1px solid var(--border-color);
   overflow-y: auto;
-  background: var(--header-bg);
+  background: var(--bg-color); /* Darker sidebar */
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
 }
 
+/* Tree Styling (Kiwi/Chrome Style) */
 .file-tree {
-  padding: 5px;
+  padding-top: 5px;
 }
 
-.file-tree-item {
-  padding: 8px; /* Larger touch target */
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.tree-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
+  padding: 2px 0;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #bdc1c6;
+  font-size: 13px;
+  user-select: none;
 }
-
-.file-tree-item.selected {
+.tree-row:hover {
+  background-color: var(--hover-bg);
+}
+.tree-row.selected {
   background-color: var(--selection-bg);
-  color: var(--text-primary);
+  color: #fff;
 }
 
+.arrow {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  font-size: 9px;
+  color: #9aa0a6;
+  transition: transform 0.1s;
+}
+.arrow.expanded {
+  transform: rotate(90deg);
+}
+.arrow.spacer {
+  width: 16px;
+}
+
+.icon {
+  margin-right: 6px;
+  font-size: 14px;
+}
+.domain .icon { filter: grayscale(1); opacity: 0.7; }
+.folder .icon { color: var(--folder-color); }
+.file .icon { filter: grayscale(1); } /* generic file icon */
+
+.label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Code Viewer */
 .main-content {
   flex: 1;
-  overflow: auto;
+  overflow: hidden; /* use internal scrolling */
   position: relative;
   background-color: var(--code-bg);
 }
 
 .code-viewer {
-  padding: 10px;
-  white-space: pre;
-  font-family: 'Consolas', 'Monaco', monospace;
-  tab-size: 2;
-  color: var(--code-text);
-  line-height: 1.5;
-  font-size: 12px;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  margin: 0;
 }
 
-/* Modal */
+.code-block {
+    margin: 0;
+    padding: 10px;
+    font-family: 'Consolas', 'Menlo', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    tab-size: 2;
+    color: #e8eaed;
+}
+
+/* Details Modal */
 .modal {
-  display: flex; /* Hidden by default via class */
+  display: flex;
   position: fixed;
-  z-index: 100;
+  z-index: 1000;
   left: 0;
   top: 0;
   width: 100%;
@@ -235,26 +300,65 @@ button {
 
 .modal-content {
   background-color: var(--panel-bg);
-  padding: 20px;
   border: 1px solid var(--border-color);
-  width: 80%;
-  max-width: 500px;
-  max-height: 80%;
-  overflow-y: auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  width: 85%;
+  height: 85%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.modal-content h3 {
+    margin: 0;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--header-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .close-modal {
-  color: var(--text-secondary);
-  float: right;
   font-size: 24px;
-  font-weight: bold;
   cursor: pointer;
+  line-height: 20px;
 }
 
-.close-modal:hover {
-  color: var(--text-primary);
+#details-body {
+    padding: 15px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.details-toolbar {
+    margin-bottom: 10px;
+}
+
+.headers-list {
+    background: #2b2b2b;
+    padding: 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    max-height: 150px;
+    overflow: auto;
+}
+.headers-list div {
+    margin-bottom: 2px;
+    word-break: break-all;
+}
+
+details {
+    margin-top: 10px;
+    border: 1px solid var(--border-color);
+    padding: 5px;
+    border-radius: 4px;
+}
+summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--text-secondary);
 }
 
 /* Mobile Adjustments */
@@ -265,17 +369,21 @@ button {
 
   .sidebar {
     width: 100%;
-    height: 180px;
+    height: 40%; /* Split screen on mobile */
     border-right: none;
     border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
   }
 
-  /* Hide less important columns */
-  .data-grid th:nth-child(4), .data-grid td:nth-child(4),
-  .data-grid th:nth-child(5), .data-grid td:nth-child(5) {
+  .main-content {
+      height: 60%;
+  }
+
+  /* Compact Network Table */
+  .data-grid th:nth-child(3), .data-grid td:nth-child(3), /* Type */
+  .data-grid th:nth-child(4), .data-grid td:nth-child(4)  /* Size */
+  {
       display: none;
   }
 
-  .data-grid th:first-child { width: 60%; }
+  .data-grid th:first-child { width: auto; }
 }

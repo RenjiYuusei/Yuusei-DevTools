@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Custom Chrome DevTools",
-  "version": "2.0",
+  "version": "2.1",
   "description": "A DevTools extension with Network (filters) and Source tabs. Mobile friendly.",
   "permissions": [
     "debugger",
@@ -15,6 +15,7 @@
     "service_worker": "background.js"
   },
   "action": {
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

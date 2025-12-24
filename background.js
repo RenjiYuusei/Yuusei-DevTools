@@ -2,19 +2,23 @@
 // Map<tabId, windowId>
 const attachedTabs = new Map();
 
-chrome.action.onClicked.addListener(async (tab) => {
-    // Check if we are already attached to this tab
-    if (attachedTabs.has(tab.id)) {
-        const windowId = attachedTabs.get(tab.id);
-        // Focus the window
-        chrome.windows.update(windowId, { focused: true }).catch(() => {
-             // Window might be closed but not cleaned up?
-             detachAndClean(tab.id);
-             attachAndOpen(tab.id);
-        });
-    } else {
-        attachAndOpen(tab.id);
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'GET_STATUS') {
+        const isAttached = attachedTabs.has(message.tabId);
+        sendResponse({ attached: isAttached });
+    } else if (message.type === 'TOGGLE_DEVTOOLS') {
+        const tabId = message.tabId;
+        if (attachedTabs.has(tabId)) {
+            const windowId = attachedTabs.get(tabId);
+            chrome.windows.remove(windowId).catch(() => {});
+            detachAndClean(tabId);
+            sendResponse({ attached: false });
+        } else {
+            attachAndOpen(tabId);
+            sendResponse({ attached: true });
+        }
     }
+    return true; // async response
 });
 
 function attachAndOpen(tabId) {

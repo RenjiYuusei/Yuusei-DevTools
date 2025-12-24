@@ -1,5 +1,5 @@
 // network.js
-import { getFileName, formatBytes } from './utils.js';
+import { getFileName, formatBytes, sendCommand } from './utils.js';
 
 const networkRequests = new Map(); // requestId -> requestData
 let currentFilter = 'all';
@@ -69,7 +69,9 @@ export function handleNetworkEvent(method, params) {
             status: 'Pending',
             size: 0,
             startTime: timestamp,
-            display: true
+            display: true,
+            postData: request.postData,
+            requestHeaders: request.headers
         });
         renderNetworkRow(requestId);
     }
@@ -82,7 +84,6 @@ export function handleNetworkEvent(method, params) {
             if (!req.type || req.type === 'Other') {
                 req.type = mapMimeToType(response.mimeType);
             }
-            // Store some headers if needed for details
             req.headers = response.headers;
             renderNetworkRow(requestId);
         }
@@ -111,6 +112,7 @@ export function handleNetworkEvent(method, params) {
 }
 
 function mapMimeToType(mime) {
+    if (!mime) return 'Other';
     if (mime.includes('javascript')) return 'Script';
     if (mime.includes('html')) return 'Document';
     if (mime.includes('css')) return 'Stylesheet';
@@ -143,8 +145,15 @@ function renderNetworkRow(requestId) {
         tr.classList.add('error');
     }
 
+    let nameContent = `<div class="cell-text">${req.name}</div><div class="cell-sub">${req.method}</div>`;
+
+    // Thumbnail for images
+    if (req.type === 'Image') {
+         nameContent = `<div class="name-col"><img src="${req.url}" class="row-thumb" alt=""> <div><div class="cell-text">${req.name}</div><div class="cell-sub">${req.method}</div></div></div>`;
+    }
+
     tr.innerHTML = `
-        <td title="${req.url}"><div class="cell-text">${req.name}</div><div class="cell-sub">${req.method}</div></td>
+        <td title="${req.url}">${nameContent}</td>
         <td>${req.status}</td>
         <td>${req.type}</td>
         <td>${formatBytes(req.size)}</td>
@@ -152,10 +161,13 @@ function renderNetworkRow(requestId) {
     `;
 }
 
-function showDetails(req) {
+async function showDetails(req) {
     if (!detailsModal || !detailsBody) return;
 
     let html = `
+        <div class="details-toolbar">
+            <button class="action-btn" id="btn-copy-curl">Copy as cURL</button>
+        </div>
         <p><strong>URL:</strong> <span style="word-break: break-all;">${req.url}</span></p>
         <p><strong>Method:</strong> ${req.method}</p>
         <p><strong>Status:</strong> ${req.status}</p>
@@ -168,16 +180,97 @@ function showDetails(req) {
         html += `<p style="color:red"><strong>Error:</strong> ${req.error}</p>`;
     }
 
-    if (req.headers) {
-         html += `<h4>Response Headers</h4><div style="max-height: 100px; overflow: auto; background: #333; padding: 5px;">`;
-         for (const [key, value] of Object.entries(req.headers)) {
+    // Request Headers & Body
+    html += `<details open><summary>Request Data</summary>`;
+    if (req.postData) {
+        html += `<h5>Post Data:</h5><pre class="code-block">${escapeHtml(req.postData)}</pre>`;
+    }
+    if (req.requestHeaders) {
+         html += `<h5>Request Headers:</h5><div class="headers-list">`;
+         for (const [key, value] of Object.entries(req.requestHeaders)) {
              html += `<div><strong>${key}:</strong> ${value}</div>`;
          }
          html += `</div>`;
     }
+    html += `</details>`;
+
+    // Response Headers
+    if (req.headers) {
+         html += `<details open><summary>Response Headers</summary><div class="headers-list">`;
+         for (const [key, value] of Object.entries(req.headers)) {
+             html += `<div><strong>${key}:</strong> ${value}</div>`;
+         }
+         html += `</div></details>`;
+    }
+
+    // Response Body
+    html += `<details open><summary>Response Body</summary>`;
+    html += `<div id="response-body-content">Loading...</div>`;
+    html += `</details>`;
 
     detailsBody.innerHTML = html;
     detailsModal.classList.remove('hidden');
+
+    // Attach cURL listener
+    document.getElementById('btn-copy-curl').onclick = () => {
+        const curl = generateCurl(req);
+        navigator.clipboard.writeText(curl).then(() => {
+            alert('Copied cURL to clipboard');
+        });
+    };
+
+    // Fetch body
+    try {
+        const result = await sendCommand('Network.getResponseBody', { requestId: req.id });
+        const bodyEl = document.getElementById('response-body-content');
+        if (result.base64Encoded) {
+            if (req.type === 'Image') {
+                bodyEl.innerHTML = `<img src="data:${req.mimeType};base64,${result.body}" style="max-width: 100%;">`;
+            } else {
+                bodyEl.textContent = "(Base64 Data)";
+            }
+        } else {
+            let content = result.body;
+            try {
+                // Try to pretty print JSON
+                if (req.mimeType.includes('json')) {
+                    content = JSON.stringify(JSON.parse(content), null, 2);
+                }
+            } catch(e) {}
+            bodyEl.innerHTML = `<pre class="code-block">${escapeHtml(content)}</pre>`;
+        }
+    } catch (e) {
+        const bodyEl = document.getElementById('response-body-content');
+        if (bodyEl) bodyEl.textContent = "Failed to load body (might be empty or restricted).";
+    }
+}
+
+function generateCurl(req) {
+    let curl = `curl '${req.url}'`;
+    curl += ` \\\n  -X '${req.method}'`;
+
+    if (req.requestHeaders) {
+        for (const [key, value] of Object.entries(req.requestHeaders)) {
+            curl += ` \\\n  -H '${key}: ${value}'`;
+        }
+    }
+
+    if (req.postData) {
+        curl += ` \\\n  --data-raw '${req.postData.replace(/'/g, "'\\''")}'`;
+    }
+
+    curl += ` \\\n  --compressed`;
+    return curl;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 function shouldShow(req) {

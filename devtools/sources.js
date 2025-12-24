@@ -4,7 +4,10 @@ import { getFileName, sendCommand } from './utils.js';
 let fileTreeEl = null;
 let codeViewerEl = null;
 const scriptFiles = new Map(); // url -> scriptId
-const addedFiles = new Set();
+const resourcesMap = new Map(); // url -> { type, id, frameId }
+
+// Tree Structure: { name: string, path: string, children: Map<string, Node>, type: 'folder'|'file', ... }
+const rootNode = { name: 'root', children: new Map(), type: 'root' };
 
 export function initSources(treeElement, viewerElement) {
     fileTreeEl = treeElement;
@@ -14,7 +17,7 @@ export function initSources(treeElement, viewerElement) {
 export function handleScriptParsed(params) {
     if (params.url) {
         scriptFiles.set(params.url, params.scriptId);
-        addFileToTree(params.url, 'script', params.scriptId);
+        addFileToTreeModel(params.url, 'script', params.scriptId);
     }
 }
 
@@ -23,12 +26,13 @@ export async function loadResources() {
     if (result && result.frameTree) {
         processFrameTree(result.frameTree);
     }
+    renderTree();
 }
 
 function processFrameTree(frameTree) {
     if (frameTree.resources) {
         frameTree.resources.forEach(res => {
-             addFileToTree(res.url, 'resource', null, frameTree.frame.id);
+             addFileToTreeModel(res.url, 'resource', null, frameTree.frame.id);
         });
     }
     if (frameTree.childFrames) {
@@ -36,43 +40,178 @@ function processFrameTree(frameTree) {
     }
 }
 
-function addFileToTree(url, type, id, frameId = null) {
-    if (!url || url.startsWith('chrome-extension:')) return;
-    if (addedFiles.has(url)) return;
-    addedFiles.add(url);
+function addFileToTreeModel(url, type, id, frameId = null) {
+    if (!url || url.startsWith('chrome-extension:') || url.startsWith('devtools:')) return;
 
-    const name = getFileName(url);
-    const div = document.createElement('div');
-    div.className = 'file-tree-item';
+    // Store metadata
+    resourcesMap.set(url, { type, id, frameId });
 
-    // Icon based on type
-    const icon = type === 'script' ? 'JS' : '📄';
+    try {
+        const u = new URL(url);
+        const host = u.hostname;
+        const pathParts = u.pathname.split('/').filter(p => p);
+        const search = u.search; // Append search to filename if needed
 
-    div.innerHTML = `<span class="file-icon">${icon}</span> <span class="file-name">${name}</span>`;
-    div.title = url;
-    div.onclick = () => loadFileContent(url, type, id, frameId, div);
+        // Ensure host node exists
+        if (!rootNode.children.has(host)) {
+            rootNode.children.set(host, {
+                name: host,
+                path: host,
+                children: new Map(),
+                type: 'domain',
+                expanded: true
+            });
+        }
+        let currentNode = rootNode.children.get(host);
 
-    fileTreeEl.appendChild(div);
+        // Traverse path
+        for (let i = 0; i < pathParts.length; i++) {
+            const part = pathParts[i];
+            const isFile = (i === pathParts.length - 1);
+
+            if (isFile) {
+                // File Node
+                const fileName = part + search;
+                currentNode.children.set(fileName, {
+                    name: fileName,
+                    path: url,
+                    type: 'file',
+                    url: url
+                });
+            } else {
+                // Folder Node
+                if (!currentNode.children.has(part)) {
+                    currentNode.children.set(part, {
+                        name: part,
+                        path: currentNode.path + '/' + part,
+                        children: new Map(),
+                        type: 'folder',
+                        expanded: false
+                    });
+                }
+                currentNode = currentNode.children.get(part);
+            }
+        }
+
+        // Handle root files (no path)
+        if (pathParts.length === 0) {
+             const fileName = '(index)' + search;
+             currentNode.children.set(fileName, {
+                 name: fileName,
+                 path: url,
+                 type: 'file',
+                 url: url
+             });
+        }
+
+        requestRender();
+
+    } catch (e) {
+        console.error("Error parsing URL", url, e);
+    }
 }
 
-async function loadFileContent(url, type, id, frameId, element) {
-    // Highlight selection
-    document.querySelectorAll('.file-tree-item').forEach(el => el.classList.remove('selected'));
-    element.classList.add('selected');
+let renderPending = false;
+function requestRender() {
+    if (renderPending) return;
+    renderPending = true;
+    requestAnimationFrame(() => {
+        renderTree();
+        renderPending = false;
+    });
+}
 
+function renderTree() {
+    if (!fileTreeEl) return;
+    fileTreeEl.innerHTML = '';
+
+    // Convert Map to Array and Sort
+    const domains = Array.from(rootNode.children.values()).sort((a,b) => a.name.localeCompare(b.name));
+
+    domains.forEach(domain => {
+        fileTreeEl.appendChild(createTreeNode(domain, 0));
+    });
+}
+
+function createTreeNode(node, level) {
+    const container = document.createElement('div');
+
+    const row = document.createElement('div');
+    row.className = `tree-row ${node.type}`;
+    row.style.paddingLeft = (level * 15) + 5 + 'px';
+
+    // Icon
+    let iconStr = '';
+    if (node.type === 'domain') iconStr = '☁️';
+    else if (node.type === 'folder') iconStr = '📁';
+    else iconStr = '📄';
+
+    // Toggle Arrow for folders/domains
+    let arrow = '';
+    if (node.children) {
+        arrow = `<span class="arrow ${node.expanded ? 'expanded' : ''}">▶</span>`;
+    } else {
+        arrow = `<span class="arrow spacer"></span>`;
+    }
+
+    row.innerHTML = `${arrow} <span class="icon">${iconStr}</span> <span class="label">${node.name}</span>`;
+
+    // Event Listeners
+    row.onclick = (e) => {
+        e.stopPropagation();
+        if (node.children) {
+            node.expanded = !node.expanded;
+            renderTree(); // Re-render to show/hide children
+        } else {
+            // File click
+            loadFileContent(node.url);
+            // Visual selection
+            document.querySelectorAll('.tree-row').forEach(el => el.classList.remove('selected'));
+            row.classList.add('selected');
+        }
+    };
+
+    container.appendChild(row);
+
+    // Render Children if expanded
+    if (node.children && node.expanded) {
+        const children = Array.from(node.children.values()).sort((a,b) => {
+            // Folders first
+            if (a.children && !b.children) return -1;
+            if (!a.children && b.children) return 1;
+            return a.name.localeCompare(b.name);
+        });
+
+        children.forEach(child => {
+            container.appendChild(createTreeNode(child, level + 1));
+        });
+    }
+
+    return container;
+}
+
+async function loadFileContent(url) {
     codeViewerEl.textContent = "Loading...";
+    const meta = resourcesMap.get(url);
+    if (!meta) return;
 
     try {
         let content = '';
-        if (type === 'script' && id) {
-            const res = await sendCommand('Debugger.getScriptSource', { scriptId: id });
+        if (meta.type === 'script' && meta.id) {
+            const res = await sendCommand('Debugger.getScriptSource', { scriptId: meta.id });
             content = res.scriptSource;
         } else {
-             const res = await sendCommand('Page.getResourceContent', { frameId: frameId, url: url });
+             const res = await sendCommand('Page.getResourceContent', { frameId: meta.frameId, url: url });
              content = res.content;
         }
-        codeViewerEl.textContent = content;
-        // Basic highlighting could go here
+
+        // Simple syntax coloring prep (could be extended)
+        codeViewerEl.innerHTML = '';
+        const pre = document.createElement('pre');
+        pre.className = 'code-block full-size';
+        pre.textContent = content;
+        codeViewerEl.appendChild(pre);
+
     } catch (e) {
         codeViewerEl.textContent = "Failed to load content: " + e.message;
     }
