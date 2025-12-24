@@ -5,12 +5,13 @@ const networkRequests = new Map(); // requestId -> requestData
 let currentFilter = 'all';
 let networkListEl = null;
 let preserveLog = false;
+let hideExtensionRequests = true;
 let detailsModal = null;
 
 // Tab Elements
 let tabHeaders, tabPayload, tabPreview, tabResponse, tabTiming;
 
-export function initNetwork(listElement, filterRadios, clearBtn, preserveCheckbox, modalElement) {
+export function initNetwork(listElement, filterRadios, clearBtn, preserveCheckbox, hideExtCheckbox, modalElement) {
     networkListEl = listElement;
 
     // Filter Listeners
@@ -30,6 +31,14 @@ export function initNetwork(listElement, filterRadios, clearBtn, preserveCheckbo
     if (preserveCheckbox) {
         preserveCheckbox.addEventListener('change', (e) => {
             preserveLog = e.target.checked;
+        });
+    }
+
+    if (hideExtCheckbox) {
+        hideExtensionRequests = hideExtCheckbox.checked;
+        hideExtCheckbox.addEventListener('change', (e) => {
+            hideExtensionRequests = e.target.checked;
+            refreshNetworkTable();
         });
     }
 
@@ -88,11 +97,6 @@ export function handleNavigation() {
 export function handleNetworkEvent(method, params) {
     if (method === 'Network.requestWillBeSent') {
         const { requestId, request, type, timestamp } = params;
-
-        // Filter out extension internal requests
-        if (request.url && request.url.startsWith('chrome-extension://')) {
-            return;
-        }
 
         networkRequests.set(requestId, {
             id: requestId,
@@ -392,6 +396,9 @@ function generateCurl(req) {
 }
 
 function shouldShow(req) {
+    if (hideExtensionRequests && req.url && req.url.startsWith('chrome-extension://')) {
+        return false;
+    }
     if (currentFilter === 'all') return true;
     return req.type === currentFilter || (currentFilter === 'Fetch' && req.type === 'XHR');
 }
