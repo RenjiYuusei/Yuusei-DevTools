@@ -1,6 +1,6 @@
 # Yuusei Devtools
 
-A mobile-friendly Chrome DevTools extension providing Network and Sources tabs with a customized UI.
+DevTools extension
 
 ## Features
 
