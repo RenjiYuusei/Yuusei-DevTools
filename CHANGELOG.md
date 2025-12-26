@@ -2,15 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2.2] - Unreleased
+## [1.1]
 ### Added
 - Text search filter in the Network tab toolbar.
 - `CHANGELOG.md` file.
 
-### Changed
-- Improved Network tab UI layout for better mobile compatibility.
-
-## [2.1] - 2023-10-25
+## [1.0]
 ### Added
 - Tabbed interface for Network details pane (Headers, Payload, Preview, Response, Timing).
 - Sources tab with hierarchical file tree support.
