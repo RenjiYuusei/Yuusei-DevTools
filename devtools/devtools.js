@@ -1,6 +1,7 @@
 import { setTabId, sendCommand } from './utils.js';
 import * as Network from './network.js';
 import * as Sources from './sources.js';
+import * as Application from './application.js';
 
 // 1. Get tabId from URL
 const params = new URLSearchParams(window.location.search);
@@ -38,9 +39,18 @@ const codeViewer = document.getElementById('code-viewer');
 Network.initNetwork(networkList, filterRadios, filterText, clearNetworkBtn, preserveCheckbox, hideExtCheckbox, detailsModal);
 Sources.initSources(fileTree, codeViewer);
 
+// App Panel Init
+const appSidebar = document.getElementById('app-sidebar');
+const appStorageList = document.getElementById('app-storage-list');
+const appRefresh = document.getElementById('app-refresh');
+const appClear = document.getElementById('app-clear');
+const appContent = document.querySelector('#application-panel .main-content'); // not strictly used but good to have
+Application.initApplication(appSidebar, appContent, appStorageList, appRefresh, appClear);
+
 // Expose modules for testing/debugging
 window.Network = Network;
 window.Sources = Sources;
+window.Application = Application;
 
 // 3. Tab Switching
 const tabs = document.querySelectorAll('.tab-btn');
@@ -85,6 +95,7 @@ async function init() {
         await sendCommand('Network.enable');
         await sendCommand('Page.enable');
         await sendCommand('Debugger.enable'); // For scripts
+        await sendCommand('DOMStorage.enable'); // For Local/Session Storage
 
         // Initial fetch of resources (non-scripts)
         Sources.loadResources();
