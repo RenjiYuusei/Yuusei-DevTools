@@ -102,6 +102,20 @@
     </div>
   </div>
 
+  <div id="value-preview-modal" class="modal hidden">
+    <div class="modal-content" style="height: 60%; width: 80%;">
+      <div class="modal-header">
+        <span id="value-preview-close" class="close-modal">&times;</span>
+        <div class="modal-title" style="margin-left: 10px; font-weight: bold; color: var(--text-primary);">
+           Value Preview: <span id="value-preview-key" style="color: var(--accent-color); font-family: monospace;"></span>
+        </div>
+      </div>
+      <div class="modal-body" style="background: var(--code-bg);">
+         <pre id="value-preview-content" class="code-block" style="user-select: text; cursor: text;"></pre>
+      </div>
+    </div>
+  </div>
+
   <div id="details-modal" class="modal hidden">
     <div class="modal-content">
       <div class="modal-header">

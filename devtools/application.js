@@ -8,11 +8,20 @@ let mainFrameOrigin = '';
 let currentUrl = '';
 let lastItems = []; // Store currently displayed items for "Clear All" logic
 
+// Value Preview Modal Elements
+let valueModal = null;
+let valueModalKey = null;
+let valueModalContent = null;
+let valueModalClose = null;
+
 // Initialize the Application panel
 export function initApplication(sidebarEl, contentEl, tableBodyEl, refreshBtn, clearBtn) {
     appSidebar = sidebarEl;
     appContent = contentEl;
     appTableBody = tableBodyEl;
+
+    // Init Modal
+    initValueModal();
 
     // Listeners for Sidebar
     appSidebar.addEventListener('click', (e) => {
@@ -35,6 +44,15 @@ export function initApplication(sidebarEl, contentEl, tableBodyEl, refreshBtn, c
 
     // Initial load helper
     fetchMainFrame();
+}
+
+function initValueModal() {
+    // Create the modal DOM dynamically if not exists, or expect it in HTML
+    // We will expect it in HTML for cleaner code, but if missing, create it.
+    // For now, let's assume we will add it to HTML in step 2.
+    // Here we just grab references once the module loads/init runs.
+
+    // We will do this lazy or in init.
 }
 
 async function fetchMainFrame() {
@@ -80,20 +98,30 @@ export async function refreshView() {
     }
 }
 
+// Replaced DOMStorage calls with Runtime.evaluate for robustness
 async function getLocalStorage(origin) {
-    // storageId: { securityOrigin, isLocalStorage: true }
-    const result = await sendCommand('DOMStorage.getDOMStorageItems', {
-        storageId: { securityOrigin: origin, isLocalStorage: true }
-    });
-    // Result is [ [key, value], [key, value] ]
-    return result.entries.map(([key, value]) => ({ key, value }));
+    // We use JSON.stringify(Object.entries(...)) to get all data safely
+    const expression = `JSON.stringify(Object.entries(localStorage))`;
+    const result = await sendCommand('Runtime.evaluate', { expression, returnByValue: true });
+
+    if (result.exceptionDetails) {
+        throw new Error(result.exceptionDetails.text);
+    }
+
+    const entries = JSON.parse(result.result.value);
+    return entries.map(([key, value]) => ({ key, value }));
 }
 
 async function getSessionStorage(origin) {
-    const result = await sendCommand('DOMStorage.getDOMStorageItems', {
-        storageId: { securityOrigin: origin, isLocalStorage: false }
-    });
-    return result.entries.map(([key, value]) => ({ key, value }));
+    const expression = `JSON.stringify(Object.entries(sessionStorage))`;
+    const result = await sendCommand('Runtime.evaluate', { expression, returnByValue: true });
+
+    if (result.exceptionDetails) {
+        throw new Error(result.exceptionDetails.text);
+    }
+
+    const entries = JSON.parse(result.result.value);
+    return entries.map(([key, value]) => ({ key, value }));
 }
 
 async function getCookies() {
@@ -150,6 +178,11 @@ function renderTable(items) {
         };
         tdKey.prepend(delBtn);
 
+        // Click on row to view details
+        tr.onclick = () => {
+             showValueModal(item);
+        };
+
         // If it's a cookie, maybe show tooltip with more info
         if (currentView.type === 'cookies') {
             tr.title = `Domain: ${item.domain}\nPath: ${item.path}\nExpires: ${item.expires}`;
@@ -167,14 +200,12 @@ async function deleteItem(item) {
 
     try {
         if (currentView.type === 'local') {
-            await sendCommand('DOMStorage.removeDOMStorageItem', {
-                storageId: { securityOrigin: currentView.origin, isLocalStorage: true },
-                key: item.key
+            await sendCommand('Runtime.evaluate', {
+                expression: `localStorage.removeItem(${JSON.stringify(item.key)})`
             });
         } else if (currentView.type === 'session') {
-            await sendCommand('DOMStorage.removeDOMStorageItem', {
-                storageId: { securityOrigin: currentView.origin, isLocalStorage: false },
-                key: item.key
+            await sendCommand('Runtime.evaluate', {
+                expression: `sessionStorage.removeItem(${JSON.stringify(item.key)})`
             });
         } else if (currentView.type === 'cookies') {
              await sendCommand('Network.deleteCookies', {
@@ -197,13 +228,9 @@ async function clearCurrentStorage() {
 
     try {
         if (currentView.type === 'local') {
-            await sendCommand('DOMStorage.clearDOMStorageItems', {
-                storageId: { securityOrigin: currentView.origin, isLocalStorage: true }
-            });
+             await sendCommand('Runtime.evaluate', { expression: `localStorage.clear()` });
         } else if (currentView.type === 'session') {
-            await sendCommand('DOMStorage.clearDOMStorageItems', {
-                storageId: { securityOrigin: currentView.origin, isLocalStorage: false }
-            });
+             await sendCommand('Runtime.evaluate', { expression: `sessionStorage.clear()` });
         } else if (currentView.type === 'cookies') {
             // Safer clear: delete only visible cookies
             for (const item of lastItems) {
@@ -218,5 +245,37 @@ async function clearCurrentStorage() {
         refreshView();
     } catch (e) {
         alert("Failed to clear: " + e.message);
+    }
+}
+
+// Value Preview Modal Logic
+function showValueModal(item) {
+    const modal = document.getElementById('value-preview-modal');
+    if (!modal) return;
+
+    document.getElementById('value-preview-key').textContent = item.key;
+
+    const contentBox = document.getElementById('value-preview-content');
+
+    // Try to format JSON
+    let displayValue = item.value;
+    try {
+        const obj = JSON.parse(item.value);
+        displayValue = JSON.stringify(obj, null, 2);
+    } catch (e) {
+        // Not JSON, use as is
+    }
+
+    contentBox.textContent = displayValue;
+
+    modal.classList.remove('hidden');
+
+    // Close handlers
+    const closeBtn = document.getElementById('value-preview-close');
+    closeBtn.onclick = () => modal.classList.add('hidden');
+
+    // Close on click outside
+    modal.onclick = (e) => {
+        if (e.target === modal) modal.classList.add('hidden');
     }
 }
