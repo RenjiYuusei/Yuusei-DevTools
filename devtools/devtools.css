@@ -84,6 +84,7 @@ html, body {
   background: var(--header-bg);
   gap: 8px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .filter-group {
@@ -172,6 +173,39 @@ button:hover {
   color: var(--text-primary);
   height: 24px;
   font-size: 12px;
+}
+
+.data-grid td.key-col {
+    width: 30%;
+    max-width: 200px;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+.data-grid td.value-col {
+    width: 70%;
+}
+
+.delete-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    color: #f28b82;
+    cursor: pointer;
+    margin-right: 5px;
+    font-weight: bold;
+    line-height: 14px;
+    border-radius: 3px;
+}
+.delete-icon:hover {
+    background: rgba(242, 139, 130, 0.2);
+}
+
+.empty {
+    text-align: center;
+    padding: 20px !important;
+    color: var(--text-secondary);
+    font-style: italic;
 }
 
 .data-grid tr:hover {
@@ -291,6 +325,54 @@ button:hover {
     vertical-align: middle;
     background-color: #333;
     border: 1px solid #555;
+}
+
+/* Application Panel */
+#application-panel {
+    flex-direction: row;
+}
+#application-panel .main-content {
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-section {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.section-title {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+.app-sidebar-item {
+    padding: 6px 15px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+.app-sidebar-item:hover {
+    background-color: var(--hover-bg);
+}
+.app-sidebar-item.active {
+    background-color: var(--selection-bg);
+    color: #fff;
+}
+.app-sidebar-item .origin-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-left: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.app-sidebar-item.active .origin-label {
+    color: #ccc;
 }
 
 /* Edge-like JS Icon */
@@ -544,13 +626,13 @@ button:hover {
 
 /* Mobile Adjustments */
 @media (max-width: 600px) {
-  #sources-panel {
+  #sources-panel, #application-panel {
     flex-direction: column;
   }
 
   .sidebar {
     width: 100%;
-    height: 40%; /* Split screen on mobile */
+    height: 35%; /* Split screen on mobile */
     border-right: none;
     border-bottom: 1px solid var(--border-color);
   }

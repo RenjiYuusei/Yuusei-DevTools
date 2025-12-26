@@ -11,6 +11,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="network">Network</button>
       <button class="tab-btn" data-tab="sources">Sources</button>
+      <button class="tab-btn" data-tab="application">Application</button>
     </div>
   </div>
 
@@ -57,6 +58,47 @@
     </div>
     <div class="main-content">
       <div id="code-viewer" class="code-viewer">Select a file to view content</div>
+    </div>
+  </div>
+
+  <div id="application-panel" class="panel">
+    <div class="sidebar" id="app-sidebar">
+      <div class="sidebar-section">
+        <div class="section-title">Storage</div>
+        <div class="app-sidebar-item" data-type="local">
+          <span class="icon">📦</span> Local Storage
+          <div class="origin-label"></div>
+        </div>
+        <div class="app-sidebar-item" data-type="session">
+          <span class="icon">⏳</span> Session Storage
+          <div class="origin-label"></div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="section-title">Cookies</div>
+        <div class="app-sidebar-item" data-type="cookies">
+          <span class="icon">🍪</span> Cookies
+        </div>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="toolbar">
+        <button id="app-refresh">Refresh</button>
+        <button id="app-clear">Clear All</button>
+      </div>
+      <div class="data-grid-container">
+        <table class="data-grid">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="app-storage-list">
+             <!-- Rows -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 

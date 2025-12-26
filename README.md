@@ -13,6 +13,9 @@ A mobile-friendly Chrome DevTools extension providing Network and Sources tabs w
     *   View loaded resources in a file tree structure.
     *   Specific icons for JS and CSS files.
     *   Code viewer with vertical text wrapping (no horizontal scrolling).
+*   **Application Tab**:
+    *   View and manage Local Storage, Session Storage, and Cookies.
+    *   Clear individual or all storage items.
 *   **Mobile Optimized**:
     *   Full-screen vertical layout for code viewing.
     *   Touch-friendly tabs and file tree.
