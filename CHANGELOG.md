@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2]
+### Added
+- Application tab for inspecting Local Storage, Session Storage, and Cookies.
+- Ability to delete storage items and cookies.
+
 ## [1.1]
 ### Added
 - Text search filter in the Network tab toolbar.
